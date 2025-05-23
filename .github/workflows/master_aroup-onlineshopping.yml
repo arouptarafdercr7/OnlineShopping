@@ -22,7 +22,7 @@ jobs:
         uses: NuGet/setup-nuget@v1.2.0
 
       - name: Restore NuGet packages
-        run: nuget restore OnlineShopping.sln
+        run: nuget restore Lesson-10(DataTable_Edit_DeleteData).sln
 
       - name: Build and publish WebForms project
         run: |
