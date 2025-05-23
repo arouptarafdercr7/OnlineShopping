@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP app to Azure Web App - aroup-onlineshopping
+name: Build and deploy ASP.NET WebForms App - aroup-onlineshopping
 
 on:
   push:
@@ -13,28 +10,34 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup MSBuild path
-        uses: microsoft/setup-msbuild@v1.0.2
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
 
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1.0.5
+        uses: NuGet/setup-nuget@v1.2.0
 
       - name: Restore NuGet packages
-        run: nuget restore
+        run: nuget restore OnlineShopping.sln
 
-      - name: Publish to folder
-        run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
+      - name: Build and publish WebForms project
+        run: |
+          msbuild "Lesson-10(DataTable_Edit_DeleteData)/Lesson-10(DataTable_Edit_DeleteData).csproj" `
+            /p:DeployOnBuild=true `
+            /p:WebProjectOutputDir="$(Build.ArtifactStagingDirectory)\WebApp" `
+            /p:OutputPath="$(Build.ArtifactStagingDirectory)\WebApp" `
+            /p:Configuration=Release `
+            /p:PackageAsSingleFile=false
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ASP-app
-          path: '/published/**'
+          name: webforms-app
+          path: ./Lesson-10(DataTable_Edit_DeleteData)/bin/Release/
 
   deploy:
     runs-on: windows-latest
@@ -42,18 +45,18 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ASP-app
-      
+          name: webforms-app
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'aroup-onlineshopping'
           slot-name: 'Production'
-          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E2EEC27938A446E7A62D9D28F40F3933 }}
+          package: .
